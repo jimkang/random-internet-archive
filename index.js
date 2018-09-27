@@ -86,8 +86,15 @@ function randomInternetArchive(
     }
   }
 
-  function filterFiles({ files }, done) {
-    var usableFiles = files.filter(fileIsUsable);
+  function filterFiles({ files, item }, done) {
+    var usableFiles = compact(files).filter(fileIsUsable);
+    if (usableFiles.length < 1) {
+      callNextTick(
+        done,
+        new Error(`No usable files found for ${item.identifier}.`)
+      );
+      return;
+    }
     callNextTick(done, null, { files: usableFiles });
   }
 
@@ -142,7 +149,7 @@ function searchForTotal({ collection, mediatype }, done) {
       makeIAQuery({ collection, mediatype }),
     json: true
   };
-  console.log('url:', reqOpts.url);
+  //console.log('url:', reqOpts.url);
   request(reqOpts, BodyMover(done));
 }
 

@@ -35,6 +35,30 @@ var testCases = [
       maximumSize: 2000000
     },
     expectedProperties: ['url', 'title', 'size', 'format']
+  },
+  {
+    name: 'Handle not finding any usable files',
+    opts: {
+      collection: 'mathematicsimage OR amesresearchcenterimagelibrary',
+      mediatype: 'image',
+      random: seedrandom('Get image'),
+      fileExtensions: ['jpg', 'jpeg'],
+      minimumSize: 20000,
+      maximumSize: 2000000
+    },
+    expectedErrorMessage: 'No usable files found for A-7514.'
+  },
+  {
+    name: 'Get image from multiple collections',
+    opts: {
+      collection: 'mathematicsimage OR amesresearchcenterimagelibrary',
+      mediatype: 'image',
+      random: seedrandom('multiple collections'),
+      fileExtensions: ['jpg', 'jpeg', 'png'],
+      minimumSize: 20000,
+      maximumSize: 5000000
+    },
+    expectedProperties: ['url', 'collection', 'title', 'size', 'format']
   }
 ];
 
