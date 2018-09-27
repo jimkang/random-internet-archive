@@ -1,7 +1,7 @@
 random-internet-archive
 ==================
 
-Gets a random Internet Archive resource, in URL form.
+Gets a random Internet Archive resource, in URL form with some metadata.
 
 Installation
 ------------
@@ -12,7 +12,16 @@ Usage
 -----
 
     var randomInternetArchive = require('random-internet-archive');
-    randomInternetArchive({ collection: 'pulpmagazinearchive', mediatype: 'image' }, print);
+    randomInternetArchive(
+      {
+        collection: 'mathematicsimage',
+        mediatype: 'image',
+        fileExtensions: ['jpg', 'jpeg'],
+        minimumSize: 20000,
+        maximumSize: 2000000
+      },
+      print
+    );
     
     function print(error, result) {
       if (error) {
@@ -25,10 +34,11 @@ Usage
 Output:
 
     {
-      identifier: 'archive-id-something',
-      item_size: '1835715',
-      title: 'Name of Thing', 
-      url: 'https://aws.something/bucket/whatever.jpg'
+      "url": "https://ia902503.us.archive.org/16/items/mathematics_05445812/mathematics_05445812_2.jpg",
+      "collection": "mathematicsimage",
+      "title": "Mathematics-Image-36",
+      "size": "337791",
+      "format": "JPEG"
     }
 
 Tests
