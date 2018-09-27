@@ -7,7 +7,17 @@ var pathExists = require('object-path-exists');
 var callNextTick = require('call-next-tick');
 var Probable = require('probable').createProbable;
 
-function randomInternetArchive({ collection, mediatype, fileExtensions, minimumSize = 0, maximumSize = -1, random = Math.random }, allDone) {
+function randomInternetArchive(
+  {
+    collection,
+    mediatype,
+    fileExtensions,
+    minimumSize = 0,
+    maximumSize = -1,
+    random = Math.random
+  },
+  allDone
+) {
   var probable = Probable({ random });
   var channel = {
     collection,
@@ -19,7 +29,11 @@ function randomInternetArchive({ collection, mediatype, fileExtensions, minimumS
     [
       // Run this first search to find out how many results there are for this query.
       curry(searchIA)(channel),
-      Collect({ channel, properties: [[getCount, 'itemCount']], noErrorParam: true }),
+      Collect({
+        channel,
+        properties: [[getCount, 'itemCount']],
+        noErrorParam: true
+      }),
       // Pick a random page.
       getRandomPageNumber,
       Collect({ channel, properties: ['page'], noErrorParam: true }),
@@ -27,9 +41,13 @@ function randomInternetArchive({ collection, mediatype, fileExtensions, minimumS
       searchIA,
       Collect({ channel, properties: [[getItem, 'item']], noErrorParam: true }),
       getMetadata,
-      Collect({ channel, properties: ['dir', 'files', 'workable_servers'], noErrorParam: true}),
+      Collect({
+        channel,
+        properties: ['dir', 'files', 'workable_servers'],
+        noErrorParam: true
+      }),
       filterFiles,
-      Collect({ channel, properties: ['files'], noErrorParam: true}),
+      Collect({ channel, properties: ['files'], noErrorParam: true }),
       formatResult
     ],
     allDone
@@ -62,24 +80,23 @@ function randomInternetArchive({ collection, mediatype, fileExtensions, minimumS
 
     function fileEndsWithExtension(extension) {
       return file.name.endsWith(extension);
-    } 
+    }
   }
 
-  function formatResult({ collection, item, dir, files, workable_servers }, done) {
+  function formatResult(
+    { collection, item, dir, files, workable_servers },
+    done
+  ) {
     var server = probable.pickFromArray(workable_servers);
     var file = probable.pickFromArray(files);
     var url = `https://${server}${dir}/${file.name}`;
-    callNextTick(
-      done,
-      null,
-      {
-        url,
-        collection,
-        title: item.title,
-        size: file.size,
-        format: file.format
-      }
-    );
+    callNextTick(done, null, {
+      url,
+      collection,
+      title: item.title,
+      size: file.size,
+      format: file.format
+    });
   }
 }
 
@@ -108,18 +125,22 @@ function searchIA({ collection, mediatype, page }, done) {
 }
 
 function createSearchURL({ queryParamDict, fields, rows, page }) {
-  return 'https://archive.org/advancedsearch.php?q=' +
-    Object.keys(queryParamDict).map(formatParam).join('+AND+') +
+  return (
+    'https://archive.org/advancedsearch.php?q=' +
+    Object.keys(queryParamDict)
+      .map(formatParam)
+      .join('+AND+') +
     '&' +
     fields.map(formatField).join('&') +
     '&' +
-    `rows=${rows}` + 
+    `rows=${rows}` +
     '&' +
-    `page=${page}` + 
+    `page=${page}` +
     '&' +
-    'output=json' + 
+    'output=json' +
     '&' +
-    'callback=';
+    'callback='
+  );
 
   function formatParam(key) {
     return encodeURIComponent(`${key}:(${queryParamDict[key]})`);
@@ -142,6 +163,5 @@ function getItem(body) {
     return body.response.docs[0];
   }
 }
-
 
 module.exports = randomInternetArchive;
