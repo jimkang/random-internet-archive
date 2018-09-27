@@ -6,6 +6,10 @@ var curry = require('lodash.curry');
 var pathExists = require('object-path-exists');
 var callNextTick = require('call-next-tick');
 var Probable = require('probable').createProbable;
+var compact = require('lodash.compact');
+
+const maxResults = 10000;
+const pageSize = 100;
 
 function randomInternetArchive(
   {
@@ -28,15 +32,15 @@ function randomInternetArchive(
   waterfall(
     [
       // Run this first search to find out how many results there are for this query.
-      curry(searchIA)(channel),
+      curry(searchForTotal)(channel),
       Collect({
         channel,
-        properties: [[getCount, 'itemCount']],
+        properties: ['total'],
         noErrorParam: true
       }),
       // Pick a random page.
-      getRandomPageNumber,
-      Collect({ channel, properties: ['page'], noErrorParam: true }),
+      pickRandomPosition,
+      Collect({ channel, properties: ['page', 'row'], noErrorParam: true }),
       // Search for the item in that random page.
       searchIA,
       Collect({ channel, properties: [[getItem, 'item']], noErrorParam: true }),
@@ -53,11 +57,32 @@ function randomInternetArchive(
     allDone
   );
 
-  function getRandomPageNumber({ itemCount }, done) {
-    if (itemCount < 1) {
+  function pickRandomPosition({ total }, done) {
+    if (total < 1) {
       callNextTick(done, new Error('No items found.'));
     } else {
-      callNextTick(done, null, { page: probable.roll(itemCount) });
+      if (total > maxResults) {
+        console.log(
+          'There are',
+          total,
+          'results. We can only get from the first',
+          maxResults
+        );
+        total = maxResults;
+      }
+      let pageTotal = Math.floor(total / pageSize);
+      callNextTick(done, null, {
+        page: probable.roll(pageTotal),
+        row: probable.roll(pageSize)
+      });
+    }
+  }
+
+  // TODO: Make CollectInChannel pass the channel so we don't have to rely
+  // on scope to get at it.
+  function getItem(body) {
+    if (pathExists(body, ['response', 'docs', channel.row])) {
+      return body.response.docs[channel.row];
     }
   }
 
@@ -109,27 +134,40 @@ function getMetadata({ item }, done) {
   request(reqOpts, BodyMover(done));
 }
 
+function searchForTotal({ collection, mediatype }, done) {
+  var reqOpts = {
+    method: 'GET',
+    url:
+      'https://archive.org/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=' +
+      makeIAQuery({ collection, mediatype }),
+    json: true
+  };
+  console.log('url:', reqOpts.url);
+  request(reqOpts, BodyMover(done));
+}
+
 function searchIA({ collection, mediatype, page }, done) {
   var reqOpts = {
     method: 'GET',
     url: createSearchURL({
-      queryParamDict: { collection, mediatype },
+      iaQueryDict: {
+        collection,
+        mediatype
+      },
       fields: ['identifier', 'item_size', 'title'],
-      rows: 1,
+      rows: pageSize,
       page
     }),
     json: true
   };
-  // console.log('url:', reqOpts.url);
+  console.log('url:', reqOpts.url);
   request(reqOpts, BodyMover(done));
 }
 
-function createSearchURL({ queryParamDict, fields, rows, page }) {
+function createSearchURL({ iaQueryDict, fields, rows, page }) {
   return (
     'https://archive.org/advancedsearch.php?q=' +
-    Object.keys(queryParamDict)
-      .map(formatParam)
-      .join('+AND+') +
+    makeIAQuery(iaQueryDict) +
     '&' +
     fields.map(formatField).join('&') +
     '&' +
@@ -141,27 +179,20 @@ function createSearchURL({ queryParamDict, fields, rows, page }) {
     '&' +
     'callback='
   );
+}
+
+function makeIAQuery(iaQueryDict) {
+  return compact(Object.keys(iaQueryDict).map(formatParam)).join('+AND+');
 
   function formatParam(key) {
-    return encodeURIComponent(`${key}:(${queryParamDict[key]})`);
+    if (iaQueryDict[key]) {
+      return encodeURIComponent(`${key}:(${iaQueryDict[key]})`);
+    }
   }
 }
 
 function formatField(field) {
   return `fl[]=${field}`;
-}
-
-function getCount(body) {
-  if (body.response && !isNaN(body.response.numFound)) {
-    return body.response.numFound;
-  }
-  return 0;
-}
-
-function getItem(body) {
-  if (pathExists(body, ['response', 'docs', '0'])) {
-    return body.response.docs[0];
-  }
 }
 
 module.exports = randomInternetArchive;

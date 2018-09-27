@@ -29,6 +29,7 @@
     "async-waterfall": "^0.1.5",
     "call-next-tick": "^2.0.1",
     "collect-in-channel": "^2.1.0",
+    "lodash.compact": "^3.0.1",
     "lodash.curry": "^4.1.1",
     "object-path-exists": "^1.0.0",
     "probable": "^2.1.2",

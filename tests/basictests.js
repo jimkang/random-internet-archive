@@ -24,6 +24,17 @@ var testCases = [
       maximumSize: 2000000
     },
     expectedProperties: ['url', 'collection', 'title', 'size', 'format']
+  },
+  {
+    name: 'Get image from large pool',
+    opts: {
+      mediatype: 'image',
+      random: seedrandom('Get image from large pool'),
+      fileExtensions: ['jpg', 'jpeg', 'png'],
+      minimumSize: 20000,
+      maximumSize: 2000000
+    },
+    expectedProperties: ['url', 'title', 'size', 'format']
   }
 ];
 
