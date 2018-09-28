@@ -5,6 +5,18 @@ var seedrandom = require('seedrandom');
 
 var testCases = [
   {
+    name: 'Free form query',
+    opts: {
+      query: 'nature OR animals',
+      mediatype: 'image',
+      random: seedrandom('nature animals'),
+      fileExtensions: ['jpg', 'jpeg', 'png'],
+      minimumSize: 20000,
+      maximumSize: 5000000
+    },
+    expectedProperties: ['url', 'title', 'size', 'format']
+  },
+  {
     name: 'No results',
     opts: {
       collection: 'pulpmagazinearchive',

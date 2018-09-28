@@ -13,6 +13,7 @@ const pageSize = 100;
 
 function randomInternetArchive(
   {
+    query,
     collection,
     mediatype,
     fileExtensions,
@@ -24,6 +25,7 @@ function randomInternetArchive(
 ) {
   var probable = Probable({ random });
   var channel = {
+    query,
     collection,
     mediatype,
     page: 0
@@ -141,22 +143,23 @@ function getMetadata({ item }, done) {
   request(reqOpts, BodyMover(done));
 }
 
-function searchForTotal({ collection, mediatype }, done) {
+function searchForTotal({ query, collection, mediatype }, done) {
   var reqOpts = {
     method: 'GET',
     url:
       'https://archive.org/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=' +
-      makeIAQuery({ collection, mediatype }),
+      makeIAQuery({ collection, mediatype }, query),
     json: true
   };
   //console.log('url:', reqOpts.url);
   request(reqOpts, BodyMover(done));
 }
 
-function searchIA({ collection, mediatype, page }, done) {
+function searchIA({ query, collection, mediatype, page }, done) {
   var reqOpts = {
     method: 'GET',
     url: createSearchURL({
+      query,
       iaQueryDict: {
         collection,
         mediatype
@@ -171,10 +174,10 @@ function searchIA({ collection, mediatype, page }, done) {
   request(reqOpts, BodyMover(done));
 }
 
-function createSearchURL({ iaQueryDict, fields, rows, page }) {
+function createSearchURL({ iaQueryDict, fields, rows, page, query }) {
   return (
     'https://archive.org/advancedsearch.php?q=' +
-    makeIAQuery(iaQueryDict) +
+    makeIAQuery(iaQueryDict, query) +
     '&' +
     fields.map(formatField).join('&') +
     '&' +
@@ -188,8 +191,12 @@ function createSearchURL({ iaQueryDict, fields, rows, page }) {
   );
 }
 
-function makeIAQuery(iaQueryDict) {
-  return compact(Object.keys(iaQueryDict).map(formatParam)).join('+AND+');
+function makeIAQuery(iaQueryDict, freeFormQuery) {
+  var q = compact(Object.keys(iaQueryDict).map(formatParam)).join('+AND+');
+  if (freeFormQuery) {
+    q = encodeURIComponent(`(${freeFormQuery}) AND `) + q;
+  }
+  return q;
 
   function formatParam(key) {
     if (iaQueryDict[key]) {
