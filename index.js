@@ -129,7 +129,8 @@ function randomInternetArchive(
       collection,
       title: item.title,
       size: file.size,
-      format: file.format
+      format: file.format,
+      detailsURL: `https://archive.org/details/${item.identifier}`
     });
   }
 }

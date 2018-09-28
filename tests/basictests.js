@@ -14,7 +14,7 @@ var testCases = [
       minimumSize: 20000,
       maximumSize: 5000000
     },
-    expectedProperties: ['url', 'title', 'size', 'format']
+    expectedProperties: ['url', 'title', 'size', 'format', 'detailsURL']
   },
   {
     name: 'No results',
@@ -35,7 +35,7 @@ var testCases = [
       minimumSize: 20000,
       maximumSize: 2000000
     },
-    expectedProperties: ['url', 'collection', 'title', 'size', 'format']
+    expectedProperties: ['url', 'collection', 'title', 'size', 'format', 'detailsURL']
   },
   {
     name: 'Get image from large pool',
@@ -46,7 +46,7 @@ var testCases = [
       minimumSize: 20000,
       maximumSize: 2000000
     },
-    expectedProperties: ['url', 'title', 'size', 'format']
+    expectedProperties: ['url', 'title', 'size', 'format', 'detailsURL']
   },
   {
     name: 'Handle not finding any usable files',
@@ -70,7 +70,7 @@ var testCases = [
       minimumSize: 20000,
       maximumSize: 5000000
     },
-    expectedProperties: ['url', 'collection', 'title', 'size', 'format']
+    expectedProperties: ['url', 'collection', 'title', 'size', 'format', 'detailsURL']
   }
 ];
 
