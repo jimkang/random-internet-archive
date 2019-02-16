@@ -20,7 +20,7 @@ function randomInternetArchive(
     minimumSize = 0,
     maximumSize = -1,
     random = Math.random,
-    baseURL = 'https://archive.org'
+    proxyBaseURL = 'https://archive.org'
   },
   allDone
 ) {
@@ -131,14 +131,16 @@ function randomInternetArchive(
       title: item.title,
       size: file.size,
       format: file.format,
-      detailsURL: `${baseURL}/details/${item.identifier}`
+      detailsURL: `${proxyBaseURL}/details/${item.identifier}`
     });
   }
 
   function getMetadata({ item }, done) {
     var reqOpts = {
       method: 'GET',
-      url: `${baseURL}/metadata/${item.identifier}`,
+      // Ignoring proxyBaseURL here because there's no need for proxying
+      // for this endpoint.
+      url: `https://archive.org/metadata/${item.identifier}`,
       json: true
     };
     request(reqOpts, BodyMover(done));
@@ -148,7 +150,7 @@ function randomInternetArchive(
     var reqOpts = {
       method: 'GET',
       url:
-        `${baseURL}/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=` +
+        `${proxyBaseURL}/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=` +
         makeIAQuery({ collection, mediatype }, query),
       json: true
     };
@@ -177,7 +179,7 @@ function randomInternetArchive(
 
   function createSearchURL({ iaQueryDict, fields, rows, page, query }) {
     return (
-      `${baseURL}/advancedsearch.php?q=` +
+      `${proxyBaseURL}/advancedsearch.php?q=` +
       makeIAQuery(iaQueryDict, query) +
       '&' +
       fields.map(formatField).join('&') +
