@@ -19,7 +19,8 @@ function randomInternetArchive(
     fileExtensions,
     minimumSize = 0,
     maximumSize = -1,
-    random = Math.random
+    random = Math.random,
+    baseURL = 'https://archive.org'
   },
   allDone
 ) {
@@ -130,14 +131,14 @@ function randomInternetArchive(
       title: item.title,
       size: file.size,
       format: file.format,
-      detailsURL: `https://archive.org/details/${item.identifier}`
+      detailsURL: `${baseURL}/details/${item.identifier}`
     });
   }
 
   function getMetadata({ item }, done) {
     var reqOpts = {
       method: 'GET',
-      url: 'https://archive.org/metadata/' + item.identifier,
+      url: `${baseURL}/metadata/${item.identifier}`,
       json: true
     };
     request(reqOpts, BodyMover(done));
@@ -147,7 +148,7 @@ function randomInternetArchive(
     var reqOpts = {
       method: 'GET',
       url:
-        'https://archive.org/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=' +
+        `${baseURL}/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=` +
         makeIAQuery({ collection, mediatype }, query),
       json: true
     };
@@ -173,23 +174,23 @@ function randomInternetArchive(
     console.log('url:', reqOpts.url);
     request(reqOpts, BodyMover(done));
   }
-}
 
-function createSearchURL({ iaQueryDict, fields, rows, page, query }) {
-  return (
-    'https://archive.org/advancedsearch.php?q=' +
-    makeIAQuery(iaQueryDict, query) +
-    '&' +
-    fields.map(formatField).join('&') +
-    '&' +
-    `rows=${rows}` +
-    '&' +
-    `page=${page}` +
-    '&' +
-    'output=json' +
-    '&' +
-    'callback='
-  );
+  function createSearchURL({ iaQueryDict, fields, rows, page, query }) {
+    return (
+      `${baseURL}/advancedsearch.php?q=` +
+      makeIAQuery(iaQueryDict, query) +
+      '&' +
+      fields.map(formatField).join('&') +
+      '&' +
+      `rows=${rows}` +
+      '&' +
+      `page=${page}` +
+      '&' +
+      'output=json' +
+      '&' +
+      'callback='
+    );
+  }
 }
 
 function makeIAQuery(iaQueryDict, freeFormQuery) {
