@@ -2,11 +2,13 @@ var test = require('tape');
 var assertNoError = require('assert-no-error');
 var randomIA = require('../index');
 var seedrandom = require('seedrandom');
+var request = require('request');
 
 var testCases = [
   {
     name: 'Free form query',
     opts: {
+      request,
       query: 'nature OR animals',
       mediatype: 'image',
       random: seedrandom('nature animals'),
@@ -19,6 +21,7 @@ var testCases = [
   {
     name: 'No results',
     opts: {
+      request,
       collection: 'pulpmagazinearchive',
       mediatype: 'image',
       random: seedrandom('No results')
@@ -28,6 +31,7 @@ var testCases = [
   {
     name: 'Get image',
     opts: {
+      request,
       collection: 'mathematicsimage',
       mediatype: 'image',
       random: seedrandom('Get image'),
@@ -35,11 +39,19 @@ var testCases = [
       minimumSize: 20000,
       maximumSize: 2000000
     },
-    expectedProperties: ['url', 'collection', 'title', 'size', 'format', 'detailsURL']
+    expectedProperties: [
+      'url',
+      'collection',
+      'title',
+      'size',
+      'format',
+      'detailsURL'
+    ]
   },
   {
     name: 'Get image from large pool',
     opts: {
+      request,
       mediatype: 'image',
       random: seedrandom('Get image from large pool'),
       fileExtensions: ['jpg', 'jpeg', 'png'],
@@ -51,6 +63,7 @@ var testCases = [
   {
     name: 'Handle not finding any usable files',
     opts: {
+      request,
       collection: 'mathematicsimage OR amesresearchcenterimagelibrary',
       mediatype: 'image',
       random: seedrandom('Get image'),
@@ -63,6 +76,7 @@ var testCases = [
   {
     name: 'Get image from multiple collections',
     opts: {
+      request,
       collection: 'mathematicsimage OR amesresearchcenterimagelibrary',
       mediatype: 'image',
       random: seedrandom('multiple collections'),
@@ -70,7 +84,14 @@ var testCases = [
       minimumSize: 20000,
       maximumSize: 5000000
     },
-    expectedProperties: ['url', 'collection', 'title', 'size', 'format', 'detailsURL']
+    expectedProperties: [
+      'url',
+      'collection',
+      'title',
+      'size',
+      'format',
+      'detailsURL'
+    ]
   }
 ];
 

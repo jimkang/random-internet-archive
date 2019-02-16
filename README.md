@@ -12,8 +12,11 @@ Usage
 -----
 
     var randomInternetArchive = require('random-internet-archive');
+    var request = require('request');
+
     randomInternetArchive(
       {
+        request,
         collection: 'mathematicsimage',
         mediatype: 'image',
         fileExtensions: ['jpg', 'jpeg'],
@@ -40,6 +43,8 @@ Output:
       "size": "337791",
       "format": "JPEG"
     }
+
+The `request` opt can either be the [request](https://github.com/request/request) module or [one that conforms to that interface](https://github.com/jimkang/spotify-resolve#plug-in-your-own-request-library). For example, I use [basic-browser-request](https://github.com/jimkang/basic-browser-request/) when using this in the browser.
 
 Tests
 -----

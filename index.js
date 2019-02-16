@@ -1,6 +1,5 @@
 var Collect = require('collect-in-channel');
 var waterfall = require('async-waterfall');
-var request = require('request');
 var BodyMover = require('request-body-mover');
 var curry = require('lodash.curry');
 var pathExists = require('object-path-exists');
@@ -13,6 +12,7 @@ const pageSize = 100;
 
 function randomInternetArchive(
   {
+    request,
     query,
     collection,
     mediatype,
@@ -133,46 +133,46 @@ function randomInternetArchive(
       detailsURL: `https://archive.org/details/${item.identifier}`
     });
   }
-}
 
-function getMetadata({ item }, done) {
-  var reqOpts = {
-    method: 'GET',
-    url: 'https://archive.org/metadata/' + item.identifier,
-    json: true
-  };
-  request(reqOpts, BodyMover(done));
-}
+  function getMetadata({ item }, done) {
+    var reqOpts = {
+      method: 'GET',
+      url: 'https://archive.org/metadata/' + item.identifier,
+      json: true
+    };
+    request(reqOpts, BodyMover(done));
+  }
 
-function searchForTotal({ query, collection, mediatype }, done) {
-  var reqOpts = {
-    method: 'GET',
-    url:
-      'https://archive.org/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=' +
-      makeIAQuery({ collection, mediatype }, query),
-    json: true
-  };
-  //console.log('url:', reqOpts.url);
-  request(reqOpts, BodyMover(done));
-}
+  function searchForTotal({ query, collection, mediatype }, done) {
+    var reqOpts = {
+      method: 'GET',
+      url:
+        'https://archive.org/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=' +
+        makeIAQuery({ collection, mediatype }, query),
+      json: true
+    };
+    //console.log('url:', reqOpts.url);
+    request(reqOpts, BodyMover(done));
+  }
 
-function searchIA({ query, collection, mediatype, page }, done) {
-  var reqOpts = {
-    method: 'GET',
-    url: createSearchURL({
-      query,
-      iaQueryDict: {
-        collection,
-        mediatype
-      },
-      fields: ['identifier', 'item_size', 'title'],
-      rows: pageSize,
-      page
-    }),
-    json: true
-  };
-  console.log('url:', reqOpts.url);
-  request(reqOpts, BodyMover(done));
+  function searchIA({ query, collection, mediatype, page }, done) {
+    var reqOpts = {
+      method: 'GET',
+      url: createSearchURL({
+        query,
+        iaQueryDict: {
+          collection,
+          mediatype
+        },
+        fields: ['identifier', 'item_size', 'title'],
+        rows: pageSize,
+        page
+      }),
+      json: true
+    };
+    console.log('url:', reqOpts.url);
+    request(reqOpts, BodyMover(done));
+  }
 }
 
 function createSearchURL({ iaQueryDict, fields, rows, page, query }) {
