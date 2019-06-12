@@ -16,11 +16,13 @@ function randomInternetArchive(
     query,
     collection,
     mediatype,
+    format,
     fileExtensions,
     minimumSize = 0,
-    maximumSize = -1,
+    maximumSize = undefined,
     random = Math.random,
-    proxyBaseURL = 'https://archive.org'
+    proxyBaseURL = 'https://archive.org',
+    maxTries = 10
   },
   allDone
 ) {
@@ -29,36 +31,57 @@ function randomInternetArchive(
     query,
     collection,
     mediatype,
+    format,
     page: 0
   };
+  var tries = 0;
+  tryToGet();
 
-  waterfall(
-    [
-      // Run this first search to find out how many results there are for this query.
-      curry(searchForTotal)(channel),
-      Collect({
-        channel,
-        properties: ['total'],
-        noErrorParam: true
-      }),
-      // Pick a random page.
-      pickRandomPosition,
-      Collect({ channel, properties: ['page', 'row'], noErrorParam: true }),
-      // Search for the item in that random page.
-      searchIA,
-      Collect({ channel, properties: [[getItem, 'item']], noErrorParam: true }),
-      getMetadata,
-      Collect({
-        channel,
-        properties: ['dir', 'files', 'workable_servers'],
-        noErrorParam: true
-      }),
-      filterFiles,
-      Collect({ channel, properties: ['files'], noErrorParam: true }),
-      formatResult
-    ],
-    allDone
-  );
+  function tryToGet() {
+    waterfall(
+      [
+        // Run this first search to find out how many results there are for this query.
+        curry(searchForTotal)(channel),
+        Collect({
+          channel,
+          properties: ['total'],
+          noErrorParam: true
+        }),
+        // Pick a random page.
+        pickRandomPosition,
+        Collect({ channel, properties: ['page', 'row'], noErrorParam: true }),
+        // Search for the item in that random page.
+        searchIA,
+        Collect({
+          channel,
+          properties: [[getItem, 'item']],
+          noErrorParam: true
+        }),
+        getMetadata,
+        Collect({
+          channel,
+          properties: ['dir', 'files', 'workable_servers'],
+          noErrorParam: true
+        }),
+        filterFiles,
+        Collect({ channel, properties: ['files'], noErrorParam: true }),
+        formatResult
+      ],
+      decideWithResult
+    );
+  }
+
+  function decideWithResult(error, result) {
+    tries += 1;
+    if (error && tries < maxTries) {
+      //console.log('Error', error, 'Tries', tries, 'Retrying.');
+      callNextTick(tryToGet);
+    } else if (error) {
+      allDone(error);
+    } else {
+      allDone(error, result);
+    }
+  }
 
   function pickRandomPosition({ total }, done) {
     if (total < 1) {
@@ -146,26 +169,27 @@ function randomInternetArchive(
     request(reqOpts, BodyMover(done));
   }
 
-  function searchForTotal({ query, collection, mediatype }, done) {
+  function searchForTotal({ query, collection, mediatype, format }, done) {
     var reqOpts = {
       method: 'GET',
       url:
         `${proxyBaseURL}/services/search/v1/scrape?debug=false&xvar=production&total_only=true&q=` +
-        makeIAQuery({ collection, mediatype }, query),
+        makeIAQuery({ collection, mediatype, format }, query),
       json: true
     };
     //console.log('url:', reqOpts.url);
     request(reqOpts, BodyMover(done));
   }
 
-  function searchIA({ query, collection, mediatype, page }, done) {
+  function searchIA({ query, collection, mediatype, format, page }, done) {
     var reqOpts = {
       method: 'GET',
       url: createSearchURL({
         query,
         iaQueryDict: {
           collection,
-          mediatype
+          mediatype,
+          format
         },
         fields: ['identifier', 'item_size', 'title'],
         rows: pageSize,
@@ -173,7 +197,7 @@ function randomInternetArchive(
       }),
       json: true
     };
-    console.log('url:', reqOpts.url);
+    //console.log('url:', reqOpts.url);
     request(reqOpts, BodyMover(done));
   }
 

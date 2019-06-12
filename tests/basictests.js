@@ -6,6 +6,18 @@ var request = require('request');
 
 var testCases = [
   {
+    name: 'NASA audio',
+    opts: {
+      request,
+      format: 'mp3',
+      fileExtensions: ['mp3'],
+      collection: 'nasaaudiocollection',
+      mediatype: 'audio',
+      maxTries: 100
+    },
+    expectedProperties: ['url', 'title', 'size', 'format', 'detailsURL']
+  },
+  {
     name: 'Free form query',
     opts: {
       request,
@@ -106,7 +118,7 @@ function runCase(testCase) {
     function checkResult(error, result) {
       if (testCase.expectedErrorMessage) {
         t.equal(
-          error.message,
+          error ? error.message : '',
           testCase.expectedErrorMessage,
           'Error message is correct.'
         );
