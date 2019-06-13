@@ -154,7 +154,7 @@ function randomInternetArchive(
       title: item.title,
       size: file.size,
       format: file.format,
-      detailsURL: `${proxyBaseURL}/details/${item.identifier}`
+      detailsURL: `https://archive.org/details/${item.identifier}`
     });
   }
 
